@@ -1,0 +1,114 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+
+class Cards {
+   protected Set<String> cardDeck;
+   protected LinkedList<LinkedList<String>> playersCards;
+   protected ArrayList<String> centerCards;
+   protected String centerSuit;
+   protected int currentPlayerIndex;
+   protected int currentTrickIndex;
+   protected Map<Integer, Integer> scores;
+   protected String leadCard;
+
+   Cards() {
+   }
+
+   public void cardDeck() {
+      this.cardDeck = new HashSet();
+      String[] var1 = new String[]{"H", "D", "C", "S"};
+      String[] var2 = new String[]{"A", "K", "Q", "J", "X", "9", "8", "7", "6", "5", "4", "3", "2"};
+
+      for(int var3 = 0; var3 < var1.length; ++var3) {
+         for(int var4 = 0; var4 < var2.length; ++var4) {
+            this.cardDeck.add(var1[var3] + var2[var4]);
+         }
+      }
+
+      this.shuffleDeck();
+   }
+
+   private void shuffleDeck() {
+      ArrayList var1 = new ArrayList(this.cardDeck);
+      Collections.shuffle(var1);
+      this.cardDeck = new HashSet(var1);
+   }
+
+   public void playersCard() {
+      this.playersCards = new LinkedList();
+
+      for(int var1 = 0; var1 < 4; ++var1) {
+         LinkedList var2 = new LinkedList();
+
+         for(int var3 = 0; var3 < 7; ++var3) {
+            var2.add(this.drawCardFromDeck());
+         }
+
+         this.playersCards.add(var2);
+      }
+
+   }
+
+   public void setCenterCards() {
+      this.centerCards = new ArrayList();
+      this.leadCard = this.drawCardFromDeck();
+      this.centerCards.add(this.leadCard);
+      this.centerSuit = String.valueOf(this.leadCard.charAt(0));
+   }
+
+   protected boolean isCardPlayable(LinkedList<String> var1) {
+      Iterator var2 = var1.iterator();
+
+      String var3;
+      do {
+         if (!var2.hasNext()) {
+            return false;
+         }
+
+         var3 = (String)var2.next();
+      } while(!this.isValidPlay(var3));
+
+      return true;
+   }
+
+   public void clearCenterCards() {
+      this.centerCards.clear();
+   }
+
+   public String drawCardFromDeck() {
+      if (this.cardDeck.isEmpty()) {
+         System.out.println("The deck is empty. No more cards to draw.");
+         System.out.println("Player " + this.currentPlayerIndex + " is skipped. Moving on to next player ");
+         return null;
+      } else {
+         Iterator var1 = this.cardDeck.iterator();
+         String var2 = (String)var1.next();
+         var1.remove();
+         return var2;
+      }
+   }
+
+   public boolean isValidPlay(String var1) {
+      if (this.centerCards.isEmpty()) {
+         return true;
+      } else if (var1 != null && var1.length() >= 2) {
+         String var2 = var1.substring(0, 1);
+         String var3 = var1.substring(1);
+         String var4 = (String)this.centerCards.get(0);
+         if (var4 != null && var4.length() >= 2) {
+            String var5 = var4.substring(0, 1);
+            String var6 = var4.substring(1);
+            return var2.equals(var5) || var3.equals(var6);
+         } else {
+            return false;
+         }
+      } else {
+         return false;
+      }
+   }
+}

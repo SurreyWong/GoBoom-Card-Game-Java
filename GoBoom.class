@@ -1,0 +1,437 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Scanner;
+
+public class GoBoom extends Cards {
+   public GoBoom() {
+   }
+
+   public void initialScore() {
+      this.scores = new HashMap();
+      byte var1 = 4;
+
+      for(int var2 = 0; var2 < var1; ++var2) {
+         this.scores.put(var2, 0);
+      }
+
+   }
+
+   public void resetGame() {
+      this.initialScore();
+      this.currentTrickIndex = 0;
+      this.currentPlayerIndex = 0;
+      this.cardDeck();
+      this.playersCards.clear();
+      this.centerCards.clear();
+      this.playersCard();
+      this.setCenterCards();
+      System.out.println("\nGame reset. All scores are set to zero. Round and trick number restart from 1.");
+      System.out.println("Playing the game...");
+   }
+
+   public void playerTurn() {
+      char var1 = ((String)this.centerCards.get(0)).charAt(1);
+      byte var2 = 1;
+      switch (var1) {
+         case '2':
+         case '6':
+         case 'X':
+            var2 = 2;
+            break;
+         case '3':
+         case '7':
+         case 'J':
+            var2 = 3;
+            break;
+         case '4':
+         case '8':
+         case 'Q':
+            var2 = 4;
+            break;
+         case '5':
+         case '9':
+         case 'A':
+         case 'K':
+            var2 = 1;
+            break;
+         case ':':
+         case ';':
+         case '<':
+         case '=':
+         case '>':
+         case '?':
+         case '@':
+         case 'B':
+         case 'C':
+         case 'D':
+         case 'E':
+         case 'F':
+         case 'G':
+         case 'H':
+         case 'I':
+         case 'L':
+         case 'M':
+         case 'N':
+         case 'O':
+         case 'P':
+         case 'R':
+         case 'S':
+         case 'T':
+         case 'U':
+         case 'V':
+         case 'W':
+         default:
+            System.out.println("Unknown turn value");
+      }
+
+      this.currentPlayerIndex = var2 - 1;
+   }
+
+   public void gameStatus() {
+      System.out.println("\nTrick #" + (this.currentTrickIndex + 1));
+
+      int var1;
+      for(var1 = 0; var1 < this.playersCards.size(); ++var1) {
+         System.out.println("Player " + (var1 + 1) + " Cards: " + this.playersCards.get(var1));
+      }
+
+      System.out.println("Center Cards  : " + this.centerCards);
+      System.out.println("Deck          : " + this.cardDeck);
+      System.out.print("Scores        : ");
+
+      for(var1 = 0; var1 < this.scores.size(); ++var1) {
+         System.out.print("Player " + (var1 + 1) + " = " + this.scores.get(var1) + " | ");
+      }
+
+      System.out.println();
+   }
+
+   private void scoreUpdated() {
+      this.scores.put(this.currentPlayerIndex, (Integer)this.scores.getOrDefault(this.currentPlayerIndex, 0) + 1);
+   }
+
+   public void playTurn() throws IOException {
+      LinkedList var1 = (LinkedList)this.playersCards.get(this.currentPlayerIndex);
+      System.out.println("\nPlayer " + (this.currentPlayerIndex + 1) + "'s turn.");
+      if (this.cardDeck.isEmpty() && !this.isCardPlayable(var1)) {
+         System.out.println("The Deck is empty and Player " + (this.currentPlayerIndex + 1) + "'s cards cannot be played. Skip to next player...");
+         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.playersCards.size();
+      } else {
+         System.out.print("Enter a card to play (or 'draw' to draw a card or 'more' to see more options): ");
+         Scanner var2 = new Scanner(System.in);
+
+         String var3;
+         for(var3 = var2.nextLine().toUpperCase(); !var3.equals("DRAW") && !var1.contains(var3) && !var3.equals("MORE"); var3 = var2.nextLine().toUpperCase()) {
+            System.out.print("Invalid card! Enter a valid card or 'draw' or 'more': ");
+         }
+
+         int var10001;
+         if (var3.equals("DRAW")) {
+            String var4 = this.drawCardFromDeck();
+            var1.add(var4);
+            var10001 = this.currentPlayerIndex + 1;
+            System.out.println("Player " + var10001 + " drew a card: " + var4);
+
+            while(!this.isValidPlay(var4)) {
+               System.out.println("Drawn card cannot be played. Drawing another card...");
+               var4 = this.drawCardFromDeck();
+               var1.add(var4);
+               var10001 = this.currentPlayerIndex + 1;
+               System.out.println("Player " + var10001 + " drew a card: " + var4);
+            }
+
+            var1.remove(var4);
+            this.centerCards.add(var4);
+            var10001 = this.currentPlayerIndex + 1;
+            System.out.println("Player " + var10001 + " played " + var4);
+         } else {
+            if (var3.equals("MORE")) {
+               while(true) {
+                  while(true) {
+                     System.out.println("\nMORE OPTIONS");
+                     System.out.println("S - Quit the game after saving");
+                     System.out.println("Q - Quit the game without saving");
+                     System.out.println("R - Reset the game");
+                     System.out.println("B - Back");
+                     System.out.print("\nEnter command: ");
+                     var3 = var2.nextLine().toUpperCase();
+                     if (var3.equals("S")) {
+                        this.saveGame();
+                        this.playGame();
+                     } else if (var3.equals("Q")) {
+                        System.out.print("Quitting the game without saving...\n");
+                        this.playGame();
+                     } else if (var3.equals("R")) {
+                        this.resetGame();
+                        this.startGame();
+                     } else {
+                        if (var3.equals("B")) {
+                           return;
+                        }
+
+                        System.out.println("Invalid command! Please choose one of the above!");
+                     }
+                  }
+               }
+            }
+
+            while(!this.isValidPlay(var3)) {
+               System.out.print("Invalid card! Enter a valid card or 'draw': ");
+               var3 = var2.nextLine().toUpperCase();
+            }
+
+            var1.remove(var3);
+            this.centerCards.add(var3);
+            var10001 = this.currentPlayerIndex + 1;
+            System.out.println("Player " + var10001 + " played " + var3);
+         }
+
+         this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.playersCards.size();
+         int var12 = 4;
+         if (this.currentTrickIndex == 0) {
+            ++var12;
+         }
+
+         if (this.centerCards.size() == var12) {
+            String var5 = (String)this.centerCards.get(0);
+            String var6 = String.valueOf(var5.charAt(0));
+            int var7 = this.getRankIndex(String.valueOf(var5.charAt(1)));
+            Iterator var8 = this.centerCards.iterator();
+
+            while(var8.hasNext()) {
+               String var9 = (String)var8.next();
+               String var10 = String.valueOf(var9.charAt(0));
+               int var11 = this.getRankIndex(String.valueOf(var9.charAt(1)));
+               if (var10.equals(var6) && var11 < var7) {
+                  var5 = var9;
+                  var6 = var10;
+                  var7 = var11;
+               }
+            }
+
+            int var13 = this.centerCards.indexOf(var5);
+            if (this.currentTrickIndex == 0) {
+               this.currentPlayerIndex = (this.currentPlayerIndex + (var13 - 1)) % this.playersCards.size();
+            } else {
+               this.currentPlayerIndex = (this.currentPlayerIndex + var13) % this.playersCards.size();
+            }
+
+            this.clearCenterCards();
+            this.scoreUpdated();
+            ++this.currentTrickIndex;
+            System.out.println("\nTrick winner: Player " + (this.currentPlayerIndex + 1));
+            System.out.println("Player " + (this.currentPlayerIndex + 1) + " starts the next trick.");
+         }
+
+      }
+   }
+
+   private int getRankIndex(String var1) {
+      String[] var2 = new String[]{"A", "K", "Q", "J", "X", "9", "8", "7", "6", "5", "4", "3", "2"};
+
+      for(int var3 = 0; var3 < var2.length; ++var3) {
+         if (var1.equals(var2[var3])) {
+            return var3;
+         }
+      }
+
+      return -1;
+   }
+
+   public boolean isGameOver() {
+      Iterator var1 = this.playersCards.iterator();
+
+      LinkedList var2;
+      do {
+         if (!var1.hasNext()) {
+            return false;
+         }
+
+         var2 = (LinkedList)var1.next();
+      } while(!var2.isEmpty());
+
+      return true;
+   }
+
+   public void saveGame() throws IOException {
+      BufferedWriter var1 = new BufferedWriter(new FileWriter("playersScores.txt"));
+      Iterator var2 = this.scores.values().iterator();
+
+      while(var2.hasNext()) {
+         int var3 = (Integer)var2.next();
+         var1.write("\n" + var3);
+      }
+
+      var1.close();
+      BufferedWriter var8 = new BufferedWriter(new FileWriter("playersCards.txt"));
+      Iterator var9 = this.playersCards.iterator();
+
+      Iterator var6;
+      String var7;
+      while(var9.hasNext()) {
+         LinkedList var4 = (LinkedList)var9.next();
+         StringBuilder var5 = new StringBuilder();
+         var6 = var4.iterator();
+
+         while(var6.hasNext()) {
+            var7 = (String)var6.next();
+            var5.append(var7).append(", ");
+         }
+
+         var5.setLength(var5.length() - 2);
+         var8.write("" + var5 + "\n");
+      }
+
+      var8.close();
+      BufferedWriter var10 = new BufferedWriter(new FileWriter("cardDeck.txt"));
+      Iterator var11 = this.cardDeck.iterator();
+
+      while(var11.hasNext()) {
+         String var13 = (String)var11.next();
+         var10.write("\n" + var13);
+      }
+
+      var10.close();
+      BufferedWriter var12 = new BufferedWriter(new FileWriter("playerTrick.txt"));
+      var12.write("\n" + this.currentPlayerIndex + ", " + this.currentTrickIndex);
+      var12.close();
+      BufferedWriter var14 = new BufferedWriter(new FileWriter("centerCards.txt"));
+      var6 = this.centerCards.iterator();
+
+      while(var6.hasNext()) {
+         var7 = (String)var6.next();
+         var14.write("\n" + var7);
+      }
+
+      var14.close();
+      System.out.println("\nThe game is saved. Qutting the game...");
+   }
+
+   public void loadGame() throws IOException {
+      this.scores = new HashMap();
+      BufferedReader var1 = new BufferedReader(new FileReader("playersScores.txt"));
+
+      String var2;
+      while((var2 = var1.readLine()) != null) {
+         if (!var2.isEmpty()) {
+            int var3 = Integer.parseInt(var2);
+            this.scores.put(this.scores.size(), var3);
+         }
+      }
+
+      var1.close();
+      this.playersCards = new LinkedList();
+      BufferedReader var8 = new BufferedReader(new FileReader("playersCards.txt"));
+
+      while((var2 = var8.readLine()) != null) {
+         if (!var2.isEmpty()) {
+            String[] var4 = var2.split(", ");
+            LinkedList var5 = new LinkedList(Arrays.asList(var4));
+            this.playersCards.add(var5);
+         }
+      }
+
+      var8.close();
+      this.cardDeck = new HashSet();
+      BufferedReader var9 = new BufferedReader(new FileReader("cardDeck.txt"));
+
+      while((var2 = var9.readLine()) != null) {
+         if (!var2.isEmpty()) {
+            this.cardDeck.add(var2);
+         }
+      }
+
+      var9.close();
+      BufferedReader var10 = new BufferedReader(new FileReader("playerTrick.txt"));
+      if ((var2 = var10.readLine()) != null && !var2.isEmpty()) {
+         String[] var6 = var2.split(", ");
+         this.currentPlayerIndex = Integer.parseInt(var6[0]);
+         this.currentTrickIndex = Integer.parseInt(var6[1]);
+      }
+
+      var10.close();
+      this.centerCards = new ArrayList();
+      BufferedReader var11 = new BufferedReader(new FileReader("centerCards.txt"));
+
+      while((var2 = var11.readLine()) != null) {
+         if (!var2.isEmpty()) {
+            this.centerCards.add(var2);
+         }
+      }
+
+      var11.close();
+      System.out.println("\nLoading the game...");
+
+      while(!this.isGameOver()) {
+         this.gameStatus();
+         this.playTurn();
+      }
+
+      System.out.print("\nGame over!");
+      System.out.println("Player " + this.currentPlayerIndex + " wins the round!");
+      System.out.print("Scores        : ");
+
+      for(int var7 = 0; var7 < this.scores.size(); ++var7) {
+         System.out.print("Player " + (var7 + 1) + " = " + this.scores.get(var7) + " | ");
+      }
+
+   }
+
+   public void startGame() throws IOException {
+      this.cardDeck();
+      this.initialScore();
+      this.playersCard();
+      this.setCenterCards();
+      this.playerTurn();
+
+      while(!this.isGameOver()) {
+         this.gameStatus();
+         this.playTurn();
+      }
+
+      System.out.print("\nGame over!");
+      System.out.println("Player " + this.currentPlayerIndex + " wins the round!");
+      System.out.print("Scores        : ");
+
+      for(int var1 = 0; var1 < this.scores.size(); ++var1) {
+         System.out.print("Player " + (var1 + 1) + " = " + this.scores.get(var1) + " | ");
+      }
+
+   }
+
+   public void playGame() throws IOException {
+      while(true) {
+         Scanner var1 = new Scanner(System.in);
+         System.out.println("\nWelcome to GoBoom! Let's start!");
+         System.out.println("S - Start game");
+         System.out.println("R - Resume game");
+         System.out.println("X - Exit game");
+         System.out.print("\nEnter command: ");
+         String var2 = var1.nextLine().toLowerCase();
+         if (var2.equals("s")) {
+            this.startGame();
+         } else if (var2.equals("r")) {
+            this.loadGame();
+         } else if (var2.equals("x")) {
+            System.out.println("\nGoodbye. Thank you for playing GoBoom! Exiting the program...");
+            System.exit(0);
+         } else {
+            System.out.println("\nInvalid command! Please choose one of the above");
+         }
+      }
+   }
+
+   public static void main(String[] var0) throws IOException {
+      GoBoom var1 = new GoBoom();
+      var1.playGame();
+   }
+}
